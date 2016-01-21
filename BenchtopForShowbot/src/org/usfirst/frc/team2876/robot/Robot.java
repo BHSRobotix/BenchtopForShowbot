@@ -3,6 +3,8 @@ package org.usfirst.frc.team2876.robot;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -15,6 +17,10 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 public class Robot extends IterativeRobot {
 	RobotDrive myRobot;
 	Joystick stick;
+	int frontLeftMotorPWM = 4;
+	int frontRightMotorPWM = 3;
+	int rearLeftMotorPWM = 1;
+	int rearRightMotorPWM = 2;
 	int autoLoopCounter;
 	
     /**
@@ -22,7 +28,7 @@ public class Robot extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-    	myRobot = new RobotDrive(0,1);
+    	myRobot = new RobotDrive(frontLeftMotorPWM, frontRightMotorPWM, rearLeftMotorPWM, rearRightMotorPWM);
     	stick = new Joystick(0);
     	System.out.print("riolog");
     }
@@ -51,6 +57,7 @@ public class Robot extends IterativeRobot {
      */
     public void teleopInit(){
     	System.out.print("TeleopInIt");
+    	
     }
 
     /**
