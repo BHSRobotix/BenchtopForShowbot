@@ -76,8 +76,10 @@ public class Robot extends IterativeRobot {
     public void teleopPeriodic() {
     	
 //        myRobot.arcadeDrive(stick);
-    	
-    	myRobot.arcadeDrive(-stick.getY() * .75, -stick.getX() * .75, true);
+    	double constant = .75;
+    	double yValue = -(constant * Math.pow(stick.getY(), 3) + (1 - constant)* stick.getY());
+    	double xValue = -stick.getX() * .6;
+    	myRobot.arcadeDrive(yValue, xValue, true);
     }
     
     /**
