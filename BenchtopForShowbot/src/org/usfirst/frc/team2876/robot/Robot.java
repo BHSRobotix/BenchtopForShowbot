@@ -1,5 +1,6 @@
 package org.usfirst.frc.team2876.robot;
 
+import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -17,10 +18,15 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 public class Robot extends IterativeRobot {
 	RobotDrive myRobot;
 	Joystick stick;
-	int frontLeftMotorPWM = 4;
-	int frontRightMotorPWM = 3;
-	int rearLeftMotorPWM = 1;
-	int rearRightMotorPWM = 2;
+	//these are for the jaguar based showbot
+//	int frontLeftMotorPWM = 4;
+//	int frontRightMotorPWM = 3;
+//	int rearLeftMotorPWM = 1;
+//	int rearRightMotorPWM = 2;
+	CANTalon frontLeftMotor = new CANTalon(3);
+	CANTalon frontRightMotor = new CANTalon(1);
+	CANTalon rearLeftMotor = new CANTalon(0);
+	CANTalon rearRightMotor = new CANTalon(2);
 	int autoLoopCounter;
 	
     /**
@@ -28,7 +34,11 @@ public class Robot extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-    	myRobot = new RobotDrive(frontLeftMotorPWM, frontRightMotorPWM, rearLeftMotorPWM, rearRightMotorPWM);
+//    	SpeedController frontLeftMotor, SpeedController rearLeftMotor,
+//        SpeedController frontRightMotor, SpeedController rearRightMotor
+//    	myRobot = new RobotDrive(frontLeftMotorPWM, frontRightMotorPWM, rearLeftMotorPWM, rearRightMotorPWM);
+//    	myRobot = new RobotDrive(frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor);
+    	myRobot = new RobotDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
     	stick = new Joystick(0);
     	System.out.print("riolog");
     }
@@ -65,7 +75,9 @@ public class Robot extends IterativeRobot {
      */
     public void teleopPeriodic() {
     	
-        myRobot.arcadeDrive(stick);
+//        myRobot.arcadeDrive(stick);
+    	
+    	myRobot.arcadeDrive(-stick.getY() * .75, -stick.getX() * .75, true);
     }
     
     /**
