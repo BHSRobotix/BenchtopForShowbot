@@ -1,11 +1,17 @@
 package org.usfirst.frc.team2876.robot;
 
+import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -18,11 +24,8 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 public class Robot extends IterativeRobot {
 	RobotDrive myRobot;
 	Joystick stick;
-	//these are for the jaguar based showbot
-//	int frontLeftMotorPWM = 4;
-//	int frontRightMotorPWM = 3;
-//	int rearLeftMotorPWM = 1;
-//	int rearRightMotorPWM = 2;
+	AnalogGyro gyro;
+	PIDController pid;
 	CANTalon frontLeftMotor = new CANTalon(3);
 	CANTalon frontRightMotor = new CANTalon(1);
 	CANTalon rearLeftMotor = new CANTalon(0);
@@ -34,13 +37,25 @@ public class Robot extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-//    	SpeedController frontLeftMotor, SpeedController rearLeftMotor,
-//        SpeedController frontRightMotor, SpeedController rearRightMotor
-//    	myRobot = new RobotDrive(frontLeftMotorPWM, frontRightMotorPWM, rearLeftMotorPWM, rearRightMotorPWM);
-//    	myRobot = new RobotDrive(frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor);
     	myRobot = new RobotDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
     	stick = new Joystick(0);
-    	System.out.print("riolog");
+    	gyro = new AnalogGyro(0);
+    	pid = new PIDController(.5, 0, 0, gyro, 
+    		new PIDOutput(){ 
+    			public void pidWrite(double output) {
+    				myRobot.setLeftRightMotorOutputs(output, -output);
+    				//myRobot.arcadeDrive(0,output);
+    				//myRobot.tankDrive(.3+output, -.3-output);
+    				System.out.println(output +":"+ gyro.pidGet() +":"+pid.getError());
+    			}
+    		}
+    				);
+    	pid.setContinuous(false);
+    	pid.setAbsoluteTolerance(10.0);
+    	pid.setInputRange(-90, 90);
+    	pid.setOutputRange(-.3, .3);
+    	System.out.println("riolog");
+    	myRobot.setSafetyEnabled(false);
     }
     
     /**
@@ -48,6 +63,11 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousInit() {
     	this.autoLoopCounter = 0;
+    	gyro.reset();
+    	pid.reset();
+    	pid.setSetpoint(90);
+    	pid.enable();
+    	Timer.delay(1);
     }
 
     /**
@@ -61,13 +81,19 @@ public class Robot extends IterativeRobot {
 			myRobot.drive(0.0, 0.0); 	// stop robot
 		}
     }
+    public void autonomousDisabled(){
+    	pid.disable();
+    }
     
     /**
      * This function is called once each time the robot enters tele-operated mode
      */
     public void teleopInit(){
-    	System.out.print("TeleopInIt");
-    	
+    	System.out.println("TeleopInIt");
+//    	gyro.reset();
+//    	while(gyro.getAngle() < 90) myRobot.setLeftRightMotorOutputs(.25, -.25);
+//    	myRobot.setLeftRightMotorOutputs(0, 0);
+    	pid.disable();
     }
 
     /**
@@ -75,7 +101,6 @@ public class Robot extends IterativeRobot {
      */
     public void teleopPeriodic() {
     	
-//        myRobot.arcadeDrive(stick);
     	double constant = .75;
     	double yValue = -(constant * Math.pow(stick.getY(), 3) + (1 - constant)* stick.getY());
     	double xValue = -stick.getX() * .6;
