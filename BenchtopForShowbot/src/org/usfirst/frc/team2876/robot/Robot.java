@@ -25,10 +25,10 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
  */
 public class Robot extends IterativeRobot {
 	RobotDrive myRobot;
-	Joystick controller;
+	Joystick controller, left, right;
 	JoystickButton aButton, bButton, xButton, yButton, lStick, rStick;
 	AnalogGyro gyro;
-	boolean isTankDrive, isTankDriveCompanion;
+	boolean isTankDrive, isAButtonBeingPressed;
 //	DigitalInput limitSwitch;
 	PIDController pid;
 	CANTalon frontLeftMotor = new CANTalon(3);
@@ -55,7 +55,7 @@ public class Robot extends IterativeRobot {
     	xButton = new JoystickButton(controller, 3);
     	yButton = new JoystickButton(controller, 4);
     	isTankDrive = false;
-    	isTankDriveCompanion = false;
+    	isAButtonBeingPressed = false;
 //    	limitSwitch = new DigitalInput(0);
     	pid = new PIDController(.03, .0, .025, gyro, 
     		new PIDOutput(){ 
@@ -115,13 +115,23 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	isTankDriveCompanion = isTankDrive;
-    	if (aButton.get() && isTankDrive != isTankDriveCompanion) isTankDrive = !isTankDrive;
-//    	double constant = .75;
-//    	double yValue = -(constant * Math.pow(stick.getY(), 3) + (1 - constant)* stick.getY()) * sensitivity;
-//    	double xValue = (isTankDrive) ? -getRightX() * (sensitivity * .75) : -stick.getX() * (sensitivity * .75);
-//    	if (isTankDrive) myRobot.tankDrive(yValue, xValue, true);
-//    	else myRobot.arcadeDrive(yValue, xValue, true);
+    	if(!aButton.get() && isAButtonBeingPressed){
+    		toggleTankDrive();
+    	}
+    	isAButtonBeingPressed = aButton.get();
+    	double constant = .75;
+    	double leftY = -(constant * Math.pow(controller.getY(), 3) + (1 - constant)* controller.getY()) * sensitivity;
+    	if (isTankDrive) {
+    		double rightY = -(constant * Math.pow(getRightY(), 3) + (1 - constant)* getRightY()) * sensitivity;
+    		myRobot.tankDrive(leftY, rightY, true);
+    	} else {
+        	double leftX = -controller.getX() * (sensitivity * .75);
+    		myRobot.arcadeDrive(leftY, leftX, true);
+    	}
+    }
+    
+    public void toggleTankDrive(){
+    	isTankDrive = !isTankDrive;
     }
     
     /**
