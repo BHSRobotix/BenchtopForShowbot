@@ -2,6 +2,7 @@ package org.usfirst.frc.team2876.robot;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -31,6 +32,7 @@ public class Robot extends IterativeRobot {
 	boolean isTankDrive, isAButtonBeingPressed, isBButtonBeingPressed, isSensitive;
 //	DigitalInput limitSwitch;
 	PIDController pid;
+	CameraServer microsoftCam;
 	CANTalon frontLeftMotor = new CANTalon(3);
 	CANTalon frontRightMotor = new CANTalon(1);
 	CANTalon rearLeftMotor = new CANTalon(0);
@@ -56,6 +58,8 @@ public class Robot extends IterativeRobot {
     	yButton = new JoystickButton(controller, 4);
     	isTankDrive = false;
     	isSensitive = true;
+    	microsoftCam = CameraServer.getInstance();
+    	microsoftCam.startAutomaticCapture("cam1");
     	isAButtonBeingPressed = false;
     	isBButtonBeingPressed = false;
 //    	limitSwitch = new DigitalInput(0);
@@ -122,13 +126,13 @@ public class Robot extends IterativeRobot {
     	if(!bButton.get() && isBButtonBeingPressed) toggleSensitivity();
     	isBButtonBeingPressed = bButton.get();
     	double constant = .75;
-    	sensitivity = isSensitive ? .5 : 1;
+    	sensitivity = isSensitive ? .65 : 1;
     	double leftY = -(constant * Math.pow(controller.getY(), 3) + (1 - constant)* controller.getY()) * sensitivity;
     	if (isTankDrive) {
     		double rightY = -(constant * Math.pow(getRightY(), 3) + (1 - constant)* getRightY()) * sensitivity;
     		myRobot.tankDrive(leftY, rightY, true);
     	} else {
-        	double leftX = -controller.getX() * (sensitivity * .75);
+        	double leftX = -getRightX() * .75;
     		myRobot.arcadeDrive(leftY, leftX, true);
     	}
     }
