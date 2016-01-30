@@ -2,6 +2,8 @@ package org.usfirst.frc.team2876.robot;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
@@ -23,14 +25,20 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
  */
 public class Robot extends IterativeRobot {
 	RobotDrive myRobot;
-	Joystick stick;
+	Joystick controller;
+	JoystickButton aButton, bButton, xButton, yButton, lStick, rStick;
 	AnalogGyro gyro;
+	boolean isTankDrive, isTankDriveCompanion;
+//	DigitalInput limitSwitch;
 	PIDController pid;
 	CANTalon frontLeftMotor = new CANTalon(3);
 	CANTalon frontRightMotor = new CANTalon(1);
 	CANTalon rearLeftMotor = new CANTalon(0);
 	CANTalon rearRightMotor = new CANTalon(2);
 	int autoLoopCounter;
+	double sensitivity;
+	
+	
 	
     /**
      * This function is run when the robot is first started up and should be
@@ -38,9 +46,18 @@ public class Robot extends IterativeRobot {
      */
     public void robotInit() {
     	myRobot = new RobotDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
-    	stick = new Joystick(0);
+    	controller = new Joystick(0);
     	gyro = new AnalogGyro(0);
-    	pid = new PIDController(.5, 0, 0, gyro, 
+    	gyro.setSensitivity(.007);
+    	sensitivity = 1;
+    	aButton = new JoystickButton(controller, 1);
+    	bButton = new JoystickButton(controller, 2);
+    	xButton = new JoystickButton(controller, 3);
+    	yButton = new JoystickButton(controller, 4);
+    	isTankDrive = false;
+    	isTankDriveCompanion = false;
+//    	limitSwitch = new DigitalInput(0);
+    	pid = new PIDController(.03, .0, .025, gyro, 
     		new PIDOutput(){ 
     			public void pidWrite(double output) {
     				myRobot.setLeftRightMotorOutputs(output, -output);
@@ -50,9 +67,8 @@ public class Robot extends IterativeRobot {
     			}
     		}
     				);
-    	pid.setContinuous(false);
-    	pid.setAbsoluteTolerance(10.0);
-    	pid.setInputRange(-90, 90);
+    	pid.setContinuous(true);
+    	pid.setAbsoluteTolerance(.05);
     	pid.setOutputRange(-.3, .3);
     	System.out.println("riolog");
     	myRobot.setSafetyEnabled(false);
@@ -67,20 +83,19 @@ public class Robot extends IterativeRobot {
     	pid.reset();
     	pid.setSetpoint(90);
     	pid.enable();
-    	Timer.delay(1);
     }
 
     /**
      * This function is called periodically during autonomous
      */
-    public void autonomousPeriodic() {
-    	if(autoLoopCounter < 100) {
-			myRobot.drive(-0.5, 0.0); 	// drive forwards half speed
-			autoLoopCounter++;
-		} else {
-			myRobot.drive(0.0, 0.0); 	// stop robot
-		}
-    }
+//    public void autonomousPeriodic() {
+//    	if(autoLoopCounter < 100) {
+//			myRobot.drive(-0.5, 0.0); 	// drive forwards half speed
+//			autoLoopCounter++;
+//		} else {
+//			myRobot.drive(0.0, 0.0); 	// stop robot
+//		}
+//    }
     public void autonomousDisabled(){
     	pid.disable();
     }
@@ -100,11 +115,13 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	
-    	double constant = .75;
-    	double yValue = -(constant * Math.pow(stick.getY(), 3) + (1 - constant)* stick.getY());
-    	double xValue = -stick.getX() * .6;
-    	myRobot.arcadeDrive(yValue, xValue, true);
+    	isTankDriveCompanion = isTankDrive;
+    	if (aButton.get() && isTankDrive != isTankDriveCompanion) isTankDrive = !isTankDrive;
+//    	double constant = .75;
+//    	double yValue = -(constant * Math.pow(stick.getY(), 3) + (1 - constant)* stick.getY()) * sensitivity;
+//    	double xValue = (isTankDrive) ? -getRightX() * (sensitivity * .75) : -stick.getX() * (sensitivity * .75);
+//    	if (isTankDrive) myRobot.tankDrive(yValue, xValue, true);
+//    	else myRobot.arcadeDrive(yValue, xValue, true);
     }
     
     /**
@@ -112,6 +129,14 @@ public class Robot extends IterativeRobot {
      */
     public void testPeriodic() {
     	LiveWindow.run();
+    }
+    
+    public double getRightX() {
+        return controller.getRawAxis(4);
+    }
+
+    public double getRightY() {
+        return controller.getRawAxis(5);
     }
     
 }
