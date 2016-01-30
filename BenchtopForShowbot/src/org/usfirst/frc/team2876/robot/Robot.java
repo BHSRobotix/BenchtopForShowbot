@@ -28,7 +28,7 @@ public class Robot extends IterativeRobot {
 	Joystick controller, left, right;
 	JoystickButton aButton, bButton, xButton, yButton, lStick, rStick;
 	AnalogGyro gyro;
-	boolean isTankDrive, isAButtonBeingPressed;
+	boolean isTankDrive, isAButtonBeingPressed, isBButtonBeingPressed, isSensitive;
 //	DigitalInput limitSwitch;
 	PIDController pid;
 	CANTalon frontLeftMotor = new CANTalon(3);
@@ -55,7 +55,9 @@ public class Robot extends IterativeRobot {
     	xButton = new JoystickButton(controller, 3);
     	yButton = new JoystickButton(controller, 4);
     	isTankDrive = false;
+    	isSensitive = true;
     	isAButtonBeingPressed = false;
+    	isBButtonBeingPressed = false;
 //    	limitSwitch = new DigitalInput(0);
     	pid = new PIDController(.03, .0, .025, gyro, 
     		new PIDOutput(){ 
@@ -115,11 +117,12 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	if(!aButton.get() && isAButtonBeingPressed){
-    		toggleTankDrive();
-    	}
+    	if(!aButton.get() && isAButtonBeingPressed) toggleTankDrive();
     	isAButtonBeingPressed = aButton.get();
+    	if(!bButton.get() && isBButtonBeingPressed) toggleSensitivity();
+    	isBButtonBeingPressed = bButton.get();
     	double constant = .75;
+    	sensitivity = isSensitive ? .5 : 1;
     	double leftY = -(constant * Math.pow(controller.getY(), 3) + (1 - constant)* controller.getY()) * sensitivity;
     	if (isTankDrive) {
     		double rightY = -(constant * Math.pow(getRightY(), 3) + (1 - constant)* getRightY()) * sensitivity;
@@ -132,6 +135,10 @@ public class Robot extends IterativeRobot {
     
     public void toggleTankDrive(){
     	isTankDrive = !isTankDrive;
+    }
+    
+    public void toggleSensitivity(){
+    	isSensitive = !isSensitive;
     }
     
     /**
