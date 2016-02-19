@@ -4,18 +4,22 @@ import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Jaguar;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -32,13 +36,15 @@ public class Robot extends IterativeRobot {
 	boolean isTankDrive, isAButtonBeingPressed, isBButtonBeingPressed, isSensitive;
 //	DigitalInput limitSwitch;
 	PIDController pid;
+	Encoder leftEnc, rightEnc;
 	CameraServer microsoftCam;
-	CANTalon frontLeftMotor = new CANTalon(3);
-	CANTalon frontRightMotor = new CANTalon(1);
-	CANTalon rearLeftMotor = new CANTalon(0);
-	CANTalon rearRightMotor = new CANTalon(2);
+	Talon frontLeftMotor = new Talon(7);
+	Talon frontRightMotor = new Talon(6);
+	Talon rearLeftMotor = new Talon(8);
+	Jaguar rearRightMotor = new Jaguar(9);
 	int autoLoopCounter;
 	double sensitivity;
+	boolean isDPadTopPressed = false, isDPadBottomPressed = false;
 	
 	
 	
@@ -51,7 +57,9 @@ public class Robot extends IterativeRobot {
     	controller = new Joystick(0);
     	gyro = new AnalogGyro(0);
     	gyro.setSensitivity(.007);
-    	sensitivity = 1;
+    	rightEnc = new Encoder(7, 6);
+    	leftEnc = new Encoder(9, 8);
+    	sensitivity = .65;
     	aButton = new JoystickButton(controller, 1);
     	bButton = new JoystickButton(controller, 2);
     	xButton = new JoystickButton(controller, 3);
@@ -121,12 +129,15 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
+    	updateSmartDashboard();
+    	if(controller.getPOV() == 180) sensitivity = .65;
+    	if(controller.getPOV() == 0) sensitivity = 1;
     	if(!aButton.get() && isAButtonBeingPressed) toggleTankDrive();
     	isAButtonBeingPressed = aButton.get();
-    	if(!bButton.get() && isBButtonBeingPressed) toggleSensitivity();
-    	isBButtonBeingPressed = bButton.get();
+//    	if(!bButton.get() && isBButtonBeingPressed) toggleSensitivity();
+//    	isBButtonBeingPressed = bButton.get();
     	double constant = .75;
-    	sensitivity = isSensitive ? .65 : 1;
+//    	sensitivity = isSensitive ? .65 : 1;
     	double leftY = -(constant * Math.pow(controller.getY(), 3) + (1 - constant)* controller.getY()) * sensitivity;
     	if (isTankDrive) {
     		double rightY = -(constant * Math.pow(getRightY(), 3) + (1 - constant)* getRightY()) * sensitivity;
@@ -135,6 +146,11 @@ public class Robot extends IterativeRobot {
         	double leftX = -getRightX() * .75;
     		myRobot.arcadeDrive(leftY, leftX, true);
     	}
+    }
+    
+    public void updateSmartDashboard(){
+    	SmartDashboard.putData("Right Encoder", rightEnc);
+    	SmartDashboard.putData("Left Encoder", leftEnc);
     }
     
     public void toggleTankDrive(){
